@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simplebot Database</title>
+  <style>
+    body { font-family: sans-serif; display: flex; justify-content: center; background: #eef; padding: 2rem; }
+    .container { background: white; padding: 2rem; border-radius: 1rem; width: 100%; max-width: 400px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    input, button { width: 100%; padding: 10px; margin: 0.5rem 0; border-radius: 8px; border: 1px solid #ccc; }
+    button { background: #5c6bf0; color: white; font-weight: bold; border: none; }
+    table { width: 100%; margin-top: 1rem; border-collapse: collapse; }
+    td, th { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
+    .status-active { color: green; }
+    .status-not { color: red; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 style="color: #5c6bf0; text-align: center;">Simplebot Database</h2>
+    <input type="text" id="numberInput" placeholder="Masukkan nomor" />
+    <button onclick="addNumber()">Tambah Nomor</button>
+    <input type="text" id="search" placeholder="Cari nomor..." onkeyup="filterNumbers()" />
+    <table>
+      <thead><tr><th>Nomor</th><th>Status</th></tr></thead>
+      <tbody id="dataBody"></tbody>
+    </table>
+  </div>
+
+  
+<script>
+  if (localStorage.getItem('loggedIn') !== 'true') {
+    window.location.href = '/login.html';
+  }
+</script>
+<script>
+
+    const loadNumbers = async () => {
+      const res = await fetch('/api/get-numbers');
+      const data = await res.json();
+      window.numbers = data;
+      display(data);
+    };
+
+    const display = (data) => {
+      const tbody = document.getElementById('dataBody');
+      tbody.innerHTML = '';
+      data.forEach(d => {
+        tbody.innerHTML += `<tr><td>${d.number}</td><td class="${d.status === 'active' ? 'status-active' : 'status-not'}">${d.status}</td></tr>`;
+      });
+    };
+
+    const filterNumbers = () => {
+      const val = document.getElementById('search').value;
+      const filtered = window.numbers.filter(d => d.number.includes(val));
+      display(filtered);
+    };
+
+    const addNumber = async () => {
+      const number = document.getElementById('numberInput').value;
+      const res = await fetch('/api/add-number', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number })
+      });
+      const result = await res.json();
+      alert(result.status ? `Berhasil tambah: ${result.status}` : result.error);
+      loadNumbers();
+    };
+
+    loadNumbers();
+  </script>
+</body>
+</html>
